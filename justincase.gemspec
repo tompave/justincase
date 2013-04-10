@@ -1,7 +1,9 @@
 # encoding: utf-8
 
 # pushes the lib directory at the beginning of the ruby env $LOAD_PATH
-# $LOAD_PATH.unshift(File.expand_path("../lib", __FILE__))
+lib_path = File.expand_path("../lib", __FILE__)
+$LOAD_PATH.unshift(lib_path) unless $LOAD_PATH.include?(lib_path)
+require 'justincase/meta'
 
 Gem::Specification.new do |s|
   s.name        = 'justincase'
