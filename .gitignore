@@ -13,3 +13,5 @@ Gemfile.lock
 
 
 test/tmp
+
+justincase.conf.json
