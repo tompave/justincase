@@ -1,17 +1,29 @@
 require 'resources/templates'
 require 'json'
 
+
 module JustInCase
 
   module Config
 
+    #DEFAULT_CONF_FILE_PATH = File.expand_path("~/justincase/justincase.conf.json")
+    DEFAULT_WORKING_DIR = File.expand_path("~/Desktop/justincase/")
+    DEFAULT_CONF_FILE_PATH = File.join(DEFAULT_WORKING_DIR,"justincase.conf.json")
+    
+    # these can be chaneg at runtime once the conf file is parsed
+    @default_conf_file_path ||= DEFAULT_CONF_FILE_PATH
+    @default_working_dir ||= DEFAULT_WORKING_DIR
+
     class << self
+
+      attr_accessor :default_working_dir
+      attr_accessor :default_conf_file_path
 
       def config=(hash)
         conf_hash = validate_configuration(hash)
         defaults = get_defaults
         @config = defaults.merge(conf_hash)
-      rescue JustInCase::ConfigurationError => err
+      rescue JustInCase::Config::ConfigurationError => err
         puts err.message.colorize(:red)
       end
 
@@ -28,10 +40,33 @@ module JustInCase
 
       # default cong_hash.
       # already symbolized.
+      # memoized.
       def get_defaults
-        conf_str = JustInCase::Templates::CONFIG_FILE
-        conf_hash = JSON.parse(conf_str)
-        return conf_hash.symbolize_keys!
+        unless @defaults
+          conf_str = JustInCase::Templates::CONFIG_FILE
+          conf_hash = JSON.parse(conf_str)
+          @defaults = conf_hash.symbolize_keys!
+        end
+        return @defaults
+      end
+
+
+      def parse_config_file(file_path)
+        if file_path
+          file_path = File.expand_path(file_path)
+        else
+          file_path = DEFAULT_CONF_FILE_PATH
+        end
+
+        conf_str = File.open(file_path) { |file| file.read }
+        hash = JSON.parse(conf_str)
+        self.config = hash
+
+        puts self.config.to_s.magenta
+      rescue JSON::ParserError => err
+        puts "Couldn't parse the configuration file. Please check the syntax (the commas!).".colorize(:red)
+      rescue Errno::ENOENT => err
+        puts err.message.colorize(:red)
       end
 
       private
@@ -41,13 +76,15 @@ module JustInCase
           conf_hash = validate_keys(conf_hash)
           conf_hash = validate_values(conf_hash)
         rescue Exception => ex
-          raise JustInCase::ConfigurationError, "Configuration was invalid: #{ex.message}"
+          raise JustInCase::Config::ConfigurationError, "Configuration was invalid: #{ex.message}"
         end
 
 
         def validate_keys(conf)
+          valid_keys = generate_valid_keys_reference
           conf.each_key do |key|
-            unless key.is_a?(Symbol) && JustInCase::Config::VALID_KEYS.include?(key)
+            # unless key.is_a?(Symbol) && valid_keys.include?(key)
+            unless valid_keys.include?(key)
               conf.delete(key) 
             end
           end
@@ -119,34 +156,19 @@ module JustInCase
         end
 
 
-        
-    end
+        # memoized
+        def generate_valid_keys_reference
+          unless @keys_reference
+            defaults = get_defaults
+            @keys_reference = defaults.keys
+          end
+          return @keys_reference
+        end
 
+      #-----private group
+    end # class << self
 
-    VALID_KEYS = [:working_directory,
-                  :watched_directories,
-                  :recursive_monitoring,
-                  :should_include_hidden_files,
-                  :should_whitelist_file_extensions,
-                  :file_extensions_whitelist,
-                  :should_blacklist_file_extensions,
-                  :file_extensions_blacklist,
-                  :daemonize,
-                  :verbose,
-                  :log_format,
-                  :file_copy_prefix,
-                  :file_copy_suffix,
-                  :timestamp_template,
-                  :chomod_files]
+    class ConfigurationError < StandardError ; end
 
-  end
-
-
-  
-
-
-  class ConfigurationError < StandardError
-  end
-
-  
-end
+  end # module Config
+end # module JustInCase
