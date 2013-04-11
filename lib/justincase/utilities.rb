@@ -1,7 +1,12 @@
 module JustInCase
   module Utilities
+
+
   end
 end
+
+
+
 
 class Hash
   # taken from:
@@ -13,3 +18,4 @@ class Hash
     self
   end
 end
+
