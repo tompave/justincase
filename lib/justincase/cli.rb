@@ -35,23 +35,25 @@ module JustInCase
     end
 
 
+
+
     desc "generate_config", "Generate a configuration file in the current directory"
-    option :output_file
+    option :to, :required => true,
+                :banner => "path",
+                :desc => "a custom path to generate the file to, comprising the file name"
     def generate_config
-      file_path = options[:output_file]
-      if file_path
-        file_path = File.expand_path(file_path)
+      if options[:to_path]
+        file_path = File.expand_path(options[:to_path])
       else
-        file_path = File.expand_path(".")
+        file_path = File.expand_path(File.join(".",JustInCase::Config::CONFIG_FILE_NAME))
       end
 
       if File.exists?(file_path)
         puts "Watch out: config file already exists at:\n   \
-        #{file_path}\nYo should move it or rename it first. Aborting.".colorize(:red)
+        #{file_path}\nYou should move it or rename it first. Aborting.".colorize(:red)
       else
         puts "Generating config file:\n  #{file_path}".colorize(:cyan)
-        FileUtils.mkdir_p(File.dirname(file_path))
-        File.open(file_path, 'w') { |file| file.write(JustInCase::Templates::CONFIG_FILE) }
+        JustInCase::VaultManager.create_config_file_to(file_path)
       end
     rescue Exception => ex
       puts ex.message.colorize(:red)
@@ -60,18 +62,18 @@ module JustInCase
 
 
 
-    desc "read_config", "looks for the config file and inports the options"
-    option :file
-    def read_config
-      JustInCase::Config.parse_config_file(options[:file])
-    end
+    # desc "read_config", "looks for the config file and inports the options"
+    # option :file
+    # def read_config
+    #   JustInCase::Config.parse_config_file(options[:file])
+    # end
 
 
 
 
     desc "current_config","Print the current configuration"
     def current_config
-      #read_config('justincase.conf.json')   # should be eliminated
+      JustInCase::Config.init
       conf_hash = JustInCase::Config.config
       puts "Current configuration:"
       conf_hash.each_pair do |key, value|
@@ -101,11 +103,17 @@ module JustInCase
     desc "start",
     "Start the 'justincased' daemon. justincased is responsible for monitoring the\
      file system according to the settings found in the condfig file."
-    option :conf_file
+    #option :conf_file
     def start
-      runner = JustInCase::Runner.new
-      runner.start
+      if success = JustInCase::Config.init
+        puts "success!!!!!!".colorize(:green)
+      else
+        puts "Looks like I haven't been initialized yet.\nYou should run 'justintime setup' first.".colorize(:red)
+        return false
+      end
     end
+
+
 
     desc "stop","Stop the 'justincased' daemon."
     option :lol, :type => :boolean

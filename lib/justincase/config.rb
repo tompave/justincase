@@ -1,30 +1,37 @@
 require 'resources/templates'
 require 'json'
+require 'colorize'
 
 
 module JustInCase
 
   module Config
     DEFAULT_WORKING_DIR = File.expand_path("~/justincase")
-    #DEFAULT_CONF_FILE_PATH = File.join(DEFAULT_WORKING_DIR,"justincase.conf.json")
+    RC_FILE_PATH = File.expand_path("~/.justintimerc")
+    CONFIG_FILE_NAME = "justincase.conf.json"
 
-    PID_FILE_PATH = File.join(DEFAULT_WORKING_DIR, ".justincased.pid")
+    # PID_FILE_PATH = File.join(DEFAULT_WORKING_DIR, ".justincased.pid")
     
     # these can be chaneg at runtime once the conf file is parsed
     @root_dir ||= DEFAULT_WORKING_DIR
 
     class << self
+      
+      # ------------------------------
+      # Accessors
 
-      attr_accessor :root_dir
+      attr_reader :pid_file_path
+      attr_reader :root_dir
+      def root_dir=(dir)
+        @root_dir = dir
+        @pid_file_path = File.join(dir, ".justincased.pid")
+      end
+
 
       def config=(hash)
         conf_hash = validate_configuration(hash)
         defaults = get_defaults
         @config = defaults.merge(conf_hash)
-
-        self.root_dir = @config[:working_directory]
-        #self.conf_file_path = @config[:]
-
       rescue JustInCase::Config::ConfigurationError => err
         puts err.message.colorize(:red)
       end
@@ -32,12 +39,28 @@ module JustInCase
 
 
       def config
-        unless @config
-          puts "no configuration file was found. I'm using the default configuration".colorize(:blue)
-          @config = get_defaults
-        end
+        self.init unless @config
         return @config
       end
+
+
+      # ----------------------------------
+      # called by JustInCase::Cli.start
+      def init
+        if root = read_from_rc_file # returns nil if doesn't exist
+          self.root_dir = root
+          parse_config_file # this will call the setter
+          return true
+        else
+          return false
+        end
+      rescue Exception => ex
+        puts ex.message.colorize(:red)
+        return false
+      end
+
+
+
 
 
       # default cong_hash.
@@ -53,121 +76,159 @@ module JustInCase
       end
 
 
-      def parse_config_file(file_path)
-        if file_path
-          file_path = File.expand_path(file_path)
-        else
-          file_path = DEFAULT_CONF_FILE_PATH
-        end
 
+      def write_rc_file(replace = true)
+        return false if !replace && File.exist?(RC_FILE_PATH)
+        File.open(RC_FILE_PATH,"w") { |file| file.write("root_dir #{@root_dir}") }
+        return true
+      rescue Exception => ex
+        puts ex.message.colorize(:red)
+        return false
+      end
+
+
+
+
+      # root_dir /path/to/dir
+      def read_from_rc_file
+        str = File.open(RC_FILE_PATH) { |file| file.read }
+        if str.start_with?("root_dir ")
+          str.sub!("root_dir ","")
+          return File.expand_path(str)
+        else
+          return nil
+        end
+      rescue Errno::ENOENT => err
+        puts "Couldn't find the file ~/.justincaserc".colorize(:red)
+        return nil
+      rescue Exception => ex
+        puts ex.message.colorize(:red)
+        return nil
+      end
+
+
+
+
+
+      def parse_config_file
+        hash = {}
+        file_path = File.join(@root_dir, CONFIG_FILE_NAME)
         conf_str = File.open(file_path) { |file| file.read }
         hash = JSON.parse(conf_str)
-        self.config = hash
-
-        puts self.config.to_s.magenta
+        #puts self.config.to_s.magenta
       rescue JSON::ParserError => err
         puts "Couldn't parse the configuration file. Please check the syntax (the commas!).".colorize(:red)
       rescue Errno::ENOENT => err
         puts err.message.colorize(:red)
+      ensure
+        # I must give something to the setter, even an empty hash.
+        # The setter will merge it with the defaults anyway.
+        # Also, the setter will take care of validating it.
+        self.config = hash
       end
 
-      private
 
-        def validate_configuration(conf_hash)
-          conf_hash.symbolize_keys!
-          conf_hash = validate_keys(conf_hash)
-          conf_hash = validate_values(conf_hash)
-        rescue Exception => ex
-          raise JustInCase::Config::ConfigurationError, "Configuration was invalid: #{ex.message}"
+
+
+
+
+
+
+      def validate_configuration(conf_hash)
+        conf_hash.symbolize_keys!
+        conf_hash = validate_keys(conf_hash)
+        conf_hash = validate_values(conf_hash)
+      rescue Exception => ex
+        raise JustInCase::Config::ConfigurationError, "Configuration was invalid: #{ex.message}"
+      end
+
+
+      def validate_keys(conf)
+        valid_keys = generate_valid_keys_reference
+        conf.each_key do |key|
+          # unless key.is_a?(Symbol) && valid_keys.include?(key)
+          unless valid_keys.include?(key)
+            conf.delete(key) 
+          end
+        end
+        return conf
+      end
+
+
+      def validate_values(conf)
+        bool_arr = [true, false]
+
+        # String
+        conf.delete(:working_directory) unless conf[:working_directory].is_a?(String)
+
+        # Array of Strings
+        if conf[:watched_directories].is_a?(Array)
+          conf[:watched_directories].delete_if { |item| !item.is_a?(String) }
+        else
+          conf.delete(:watched_directories)
         end
 
+        # Booleans
+        conf.delete(:recursive_monitoring) unless bool_arr.include?(conf[:recursive_monitoring])
+        conf.delete(:should_include_hidden_files) unless bool_arr.include?(conf[:should_include_hidden_files])
+        conf.delete(:should_whitelist_file_extensions) unless bool_arr.include?(conf[:should_whitelist_file_extensions])
 
-        def validate_keys(conf)
-          valid_keys = generate_valid_keys_reference
-          conf.each_key do |key|
-            # unless key.is_a?(Symbol) && valid_keys.include?(key)
-            unless valid_keys.include?(key)
-              conf.delete(key) 
+        # Array of Strings
+        if conf[:file_extensions_whitelist].is_a?(Array)
+          conf[:file_extensions_whitelist].delete_if { |item| !item.is_a?(String) }
+        else
+          conf.delete(:file_extensions_whitelist)
+        end
+
+        # Boolean
+        conf.delete(:should_blacklist_file_extensions) unless bool_arr.include?(conf[:should_blacklist_file_extensions])
+
+        # Array of Strings
+        if conf[:file_extensions_blacklist].is_a?(Array)
+          conf[:file_extensions_blacklist].delete_if { |item| !item.is_a(String) }
+        else
+          conf.delete(:file_extensions_blacklist)
+        end
+
+        # Booleans
+        conf.delete(:daemonize) unless bool_arr.include?(conf[:daemonize])
+        conf.delete(:verbose) unless bool_arr.include?(conf[:verbose])
+        
+        # Precise Strings
+        conf.delete(:log_format) unless ["txt", "sqlite"].include?(conf[:log_format])
+        conf.delete(:file_copy_prefix) unless ["timestamp", "incremental_id", ""].include?(conf[:file_copy_prefix])
+        conf.delete(:file_copy_suffix) unless ["timestamp", "incremental_id", ""].include?(conf[:file_copy_suffix])
+
+        # String
+        conf.delete(:timestamp_template) unless conf[:timestamp_template].is_a?(String)
+
+        # Boolean or numerical string in range 000..777
+        test = conf[:chomod_files]
+        unless test == false # (nil == false) returns false, so 'nil' too goes inside the block
+          if test.is_a?(String) && test.length == 3
+            arr = ["0","1","2","3","4","5","6","7"]
+            unless arr.include?(test[0]) && arr.include?(test[1]) && arr.include?(test[2])
+              conf.delete(:chomod_files) 
             end
+          else
+            conf.delete(:chomod_files)
           end
-          return conf
         end
 
+        return conf
+      end
 
-        def validate_values(conf)
-          bool_arr = [true, false]
 
-          # String
-          conf.delete(:working_directory) unless conf[:working_directory].is_a?(String)
-
-          # Array of Strings
-          if conf[:watched_directories].is_a?(Array)
-            conf[:watched_directories].delete_if { |item| !item.is_a?(String) }
-          else
-            conf.delete(:watched_directories)
-          end
-
-          # Booleans
-          conf.delete(:recursive_monitoring) unless bool_arr.include?(conf[:recursive_monitoring])
-          conf.delete(:should_include_hidden_files) unless bool_arr.include?(conf[:should_include_hidden_files])
-          conf.delete(:should_whitelist_file_extensions) unless bool_arr.include?(conf[:should_whitelist_file_extensions])
-
-          # Array of Strings
-          if conf[:file_extensions_whitelist].is_a?(Array)
-            conf[:file_extensions_whitelist].delete_if { |item| !item.is_a?(String) }
-          else
-            conf.delete(:file_extensions_whitelist)
-          end
-
-          # Boolean
-          conf.delete(:should_blacklist_file_extensions) unless bool_arr.include?(conf[:should_blacklist_file_extensions])
-
-          # Array of Strings
-          if conf[:file_extensions_blacklist].is_a?(Array)
-            conf[:file_extensions_blacklist].delete_if { |item| !item.is_a(String) }
-          else
-            conf.delete(:file_extensions_blacklist)
-          end
-
-          # Booleans
-          conf.delete(:daemonize) unless bool_arr.include?(conf[:daemonize])
-          conf.delete(:verbose) unless bool_arr.include?(conf[:verbose])
-          
-          # Precise Strings
-          conf.delete(:log_format) unless ["txt", "sqlite"].include?(conf[:log_format])
-          conf.delete(:file_copy_prefix) unless ["timestamp", "incremental_id", ""].include?(conf[:file_copy_prefix])
-          conf.delete(:file_copy_suffix) unless ["timestamp", "incremental_id", ""].include?(conf[:file_copy_suffix])
-
-          # String
-          conf.delete(:timestamp_template) unless conf[:timestamp_template].is_a?(String)
-
-          # Boolean or numerical string in range 000..777
-          test = conf[:chomod_files]
-          unless test == false # (nil == false) returns false, so 'nil' too goes inside the block
-            if test.is_a?(String) && test.length == 3
-              arr = ["0","1","2","3","4","5","6","7"]
-              unless arr.include?(test[0]) && arr.include?(test[1]) && arr.include?(test[2])
-                conf.delete(:chomod_files) 
-              end
-            else
-              conf.delete(:chomod_files)
-            end
-          end
-
-          return conf
+      # memoized
+      def generate_valid_keys_reference
+        unless @keys_reference
+          defaults = get_defaults
+          @keys_reference = defaults.keys
         end
+        return @keys_reference
+      end
 
-
-        # memoized
-        def generate_valid_keys_reference
-          unless @keys_reference
-            defaults = get_defaults
-            @keys_reference = defaults.keys
-          end
-          return @keys_reference
-        end
-
-      #-----private group
+      
     end # class << self
 
     class ConfigurationError < StandardError ; end

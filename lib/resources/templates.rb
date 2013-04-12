@@ -12,20 +12,24 @@ module JustInCase
     These are the default settings that are used if no configuration file is provided.
     All fields are optional: if you omit any key, the default value will be used.
     If some keys are duplicated, only the last occurence will take effect.
+
     The syntax is plain JSON.
 
-    When it starts, justincase will look for (and try to load) the configuration file in:
-    ''.
-    If it doesn't find it there, it will create that directory tree and generate a new
-    configuration file with all the defaults (the one you are reading right now).
-    You can start 
+    About the Initialization Process:
+    When it starts, justincase will look for the '~/.justincaserc' file, which contains
+    the path to its working directory. If that file doesn't exist, of if it cointains
+    invalid data, justincase will ask to be initialized with the command 'justincase setup'.
+    (This is the default behaviour for the first run)
+
+    If the file '~/.justincaserc' exists and is valid, justincase will use it to determine
+    the location of its working directory, where it will try to load the configuration
+    file (the one you are reading right now).
+
+    If the configuration file is missing, it will fallback to use the default settings,
+    that are the ones presented in the unmodified fresh version of the current file.
  */
  
 {
-  // Where justincase creates its directory tree and
-  // stores backups and logs
-  "working_directory" : "#{JustInCase::Config.root_dir}",
-
   // What directories should be watched.
   // Make sure the user running justincase has read permissions on them
   "watched_directories" : ["~", "~/desktop"],
@@ -136,26 +140,22 @@ This file is a TO-DO.
 
   Welcome to justincase #{JustInCase::Meta::VERSION}
 
-justincase is a command line tool to monitor system folders and back up changes.
+justincase is a command line tool to monitor system folders and save back ups.
 It runs as a daemon and listens for file system changes in the target folders.
 When something changes, justincase copies the new versions of the files in its
 working directory.
-At the same time, it logs such changes (additions, modifications, deletions) in
+At the same time, it logs said changes (additions, modifications, deletions) in
 either a text file or a SQLite3 DB.
 
-Without any configuration, justincase chooses '~/justincase' as its default
-working directory.
-Here it will create its directory tree, save the backed up files and the logs.
-Of course, you can change this by providing a configuration file.
+To get started run 'justincase setup'.
+Once done, customize the auto-generated configuration file (it's a fully
+commented JSON) and then run 'justincase start'.
 
-The command 'justincase generate_config' will create in the current directory a
-template configuration file (JSON), containing all the available configuration
-options and the default settings (full of explanatory comments).
-(you can also use the --output-file flag to specify a location)
-
-You can modify this file and
+Enjoy!
 
     ENDOFFILE
+
+
   end
 end
 

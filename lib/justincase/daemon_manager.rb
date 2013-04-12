@@ -15,7 +15,7 @@ module JustInCase
       # If it doesn't exist the daemon is not running, and can start.
       # Id it does esist, it doublechecks if the daemon is actually running
       def can_start?
-        pid_file = JustInCase::Config::PID_FILE_PATH
+        pid_file = JustInCase::Config.pid_file_path
 
         if File.exist?(pid_file)
           pid = File.open(pid_file) { |file| file.read }

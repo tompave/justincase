@@ -18,14 +18,14 @@ module JustInCase
 
       def setup_chat
         puts "\nHello #{username}, here I'll setup the working directory for you."
-        puts "Just let me collect some variables.\n "
+        puts "I only need to know where you want it to be located.\n "
 
-        puts "The default path fot the working directory is: '~/justincase'."
+        puts "The default path for the working directory is: '~/justincase'."
         change = SH.yes? "  Do you want to change it? (y/n)"
         if change
           root = nil
           until root
-            path = SH.ask "  Ok, enter the path for the working dir (I'll ask for confirmation):"
+            path = SH.ask "  Ok, enter the path for the working dir (Don't worry, I'll ask for confirmation):\n "
             path = File.expand_path(path)
             ok = SH.yes? "  I've got this one: '#{path}'.\n  Is it correct? (y/n)"
             root = path if ok
@@ -33,13 +33,14 @@ module JustInCase
         else
           root = JustInCase::Config::DEFAULT_WORKING_DIR
         end
-        puts "\nOk, I'll proceed now to create this working dir: #{root}"
+        puts "\nOk, I'm using this path: '#{root}'.\nI will store it as a String in '~/.justincaserc',\nthen I will build it using 'mkdir -p'."
         confirm = SH.yes? "  Do you confirm? (y/n)".colorize(:red)
         if confirm
-          puts "Building the directory tree...".colorize(:green)
+          puts "  Building the directory tree...".colorize(:green)
           JustInCase::Config.root_dir = root
+          JustInCase::Config.write_rc_file # this will read from JustInCase::Config.root_dir 
           JustInCase::VaultManager.build_dir_tree
-          puts "Done!".colorize(:blue)
+          puts "  Done!".colorize(:green)
         else
           puts "Ok, aborting...\n "
         end
