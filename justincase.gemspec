@@ -22,8 +22,8 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency     'thor',          '~> 0.18.1'
   s.add_runtime_dependency     'listen',        '~> 0.7.3'
-  s.add_runtime_dependency     'sqlite3',       '~> 1.3.7'
-  s.add_runtime_dependency     'daemons',       '~> 1.1.9'
+  #s.add_runtime_dependency     'sqlite3',       '~> 1.3.7'
+  #s.add_runtime_dependency     'daemons',       '~> 1.1.9'
   s.add_runtime_dependency     'colorize',      '~> 0.5.8'
 
   s.add_development_dependency 'bundler'

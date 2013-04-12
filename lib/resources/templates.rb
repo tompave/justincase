@@ -6,7 +6,8 @@ module JustInCase
 
     CONFIG_FILE = <<-ENDOFFILE
 /*  justincase configuration file.
-    Author: Tommaso Pavese (wonderingmachine.com), 2013, MIT License
+    Author: Tommaso Pavese (wonderingmachine.com)
+    MIT License
 
     These are the default settings that are used if no configuration file is provided.
     All fields are optional: if you omit any key, the default value will be used.
@@ -14,7 +15,7 @@ module JustInCase
     The syntax is plain JSON.
 
     When it starts, justincase will look for (and try to load) the configuration file in:
-    '#{JustInCase::Config::DEFAULT_CONF_FILE_PATH}'.
+    ''.
     If it doesn't find it there, it will create that directory tree and generate a new
     configuration file with all the defaults (the one you are reading right now).
     You can start 
@@ -23,7 +24,7 @@ module JustInCase
 {
   // Where justincase creates its directory tree and
   // stores backups and logs
-  "working_directory" : "#{JustInCase::Config::DEFAULT_WORKING_DIR}",
+  "working_directory" : "#{JustInCase::Config.root_dir}",
 
   // What directories should be watched.
   // Make sure the user running justincase has read permissions on them
@@ -114,8 +115,22 @@ module JustInCase
 }
     ENDOFFILE
 
-    # def self.config_file_string
-    # end
+
+
+
+
+    README_FILE = <<-ENDOFFILE
+README
+justincase #{JustInCase::Meta::VERSION}
+Author: Tommaso Pavese (wonderingmachine.com)
+MIT License
+
+This file is a TO-DO.
+
+    ENDOFFILE
+
+
+
 
     WELCOME_MESSAGE = <<-ENDOFFILE
 

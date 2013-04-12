@@ -5,24 +5,26 @@ require 'json'
 module JustInCase
 
   module Config
+    DEFAULT_WORKING_DIR = File.expand_path("~/justincase")
+    #DEFAULT_CONF_FILE_PATH = File.join(DEFAULT_WORKING_DIR,"justincase.conf.json")
 
-    #DEFAULT_CONF_FILE_PATH = File.expand_path("~/justincase/justincase.conf.json")
-    DEFAULT_WORKING_DIR = File.expand_path("~/Desktop/justincase/")
-    DEFAULT_CONF_FILE_PATH = File.join(DEFAULT_WORKING_DIR,"justincase.conf.json")
+    PID_FILE_PATH = File.join(DEFAULT_WORKING_DIR, ".justincased.pid")
     
     # these can be chaneg at runtime once the conf file is parsed
-    @default_conf_file_path ||= DEFAULT_CONF_FILE_PATH
-    @default_working_dir ||= DEFAULT_WORKING_DIR
+    @root_dir ||= DEFAULT_WORKING_DIR
 
     class << self
 
-      attr_accessor :default_working_dir
-      attr_accessor :default_conf_file_path
+      attr_accessor :root_dir
 
       def config=(hash)
         conf_hash = validate_configuration(hash)
         defaults = get_defaults
         @config = defaults.merge(conf_hash)
+
+        self.root_dir = @config[:working_directory]
+        #self.conf_file_path = @config[:]
+
       rescue JustInCase::Config::ConfigurationError => err
         puts err.message.colorize(:red)
       end

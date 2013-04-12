@@ -1,0 +1,21 @@
+justincase.rb
+    resources/templates
+        justincase/meta
+        justincase/config
+    justincase/config
+        resources/templates
+    justincase/listener
+    justincase/meta
+    justincase/runner
+        justincase/config
+    justincase/utilities
+    justincase/daemon_manager
+
+
+justincase/cli
+    justincase.rb
+    justincase/thor_overrides
+
+
+bin/justincase
+    justincase/cli

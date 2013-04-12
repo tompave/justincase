@@ -1,0 +1,6 @@
+#! /usr/bin/env ruby
+
+require 'justincase/daemon'
+
+# what about the config....
+#JustInCase::Daemon.new.start
