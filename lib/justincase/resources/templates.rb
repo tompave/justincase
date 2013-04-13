@@ -32,15 +32,14 @@ module JustInCase
 {
   // What directories should be watched.
   // Make sure the user running justincase has read permissions on them
-  "watched_directories" : ["~", "~/desktop"],
+  "watched_directories" : ["~/desktop"],
 
   // Whether is should monitor directories recursively
   "recursive_monitoring" : true,
 
-  // EXPERIMENTAL - disabled - it won't be parsed
+
   // A regexp to filter files with
   // "filter_files_with_regexp" : "/aregexp/i",
-
 
 
   // Prevents hidden files to be backed up.
@@ -81,7 +80,7 @@ module JustInCase
 
   // log file system events
   "log_format" : "txt",
-  // "log_format" : "sqlite", //EXPERIMENTAL
+  // "log_format" : "sqlite",
 
 
   // If you want actual logs

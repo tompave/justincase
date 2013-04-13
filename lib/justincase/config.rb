@@ -1,4 +1,4 @@
-require 'resources/templates'
+require 'justincase/resources/templates'
 require 'justincase/file_system/private_files'
 
 require 'json'
