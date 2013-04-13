@@ -1,46 +1,47 @@
 #justincase
+
 v 0.0.0 - not ready yet!
 ---
 
-###What?
+##What?
 __justincase__ is a daemon for Mac OS X and GNU/Linux systems, plus the command line tool to control it.  
 It's a directory monitor and automatic backup tool, highly customizable.  
 It's all written in pure Ruby. File system events are handled by [Listen](https://github.com/guard/listen), while the command line interface is powered by [Thor](https://github.com/wycats/thor).
 
-___
 
-###How?
 
-The __CLI__ component is a one-shot utility to control the __daemon__ (start and stop, duh) and to generate a self documenting JSON configuration file.  
-At the first run it builds the working directory tree for the __daemon__ at a location chosen by the user (can be reinitialized).
+##How?
+
+The __CLI__ component is a one-shot utility to control the __daemon__ (start and stop, duh) and to generate a self documenting JSON configuration file. At the first run it builds the working directory tree for the __daemon__ at a location chosen by the user (can be reinitialized).
   
 The heavy lifting is carried out by the __daemon__, that listens for file system events in the target directories and can be controlled through UNIX signals.  
 As it records changes in the monitored directories, the daemon copies any new or modified file in a backup folder, and logs (in TXT or SQLite) all recorded modification.  
 
 
----
 
-###Why?
+
+##Why?
 
 Because I was fed up _a certain Mac app_ hanging when connecting to SMTP servers, failing to send emails and – just to make things funnier – deleting any trace of the failed messages from both the draft folder and the temp dir in ~/library.  
 
-All jokes aside, __justincase__ id aimed at continuosly save the state the of a hirarchy of directories _just in case_ something might go wrong.  
+All jokes aside, __justincase__ is aimed at continuosly saving the state the of selected directories _just in case_ something goes wrong.  
+
 If you:
 
 * are doing critical work,
 * don't trust some piece of software,
-* have already experienced crashed and data loss,
+* have already experienced crashes and data loss,
 * need a quick and lightweight backup solution,
 
 __justincase__ might come in handy.
 
 
-___
 
-###The configuration file
+
+##The configuration file
 Can be found in `justincase/lib/justincase/resources/templates.rb`
 
-```JSON
+```javascript
 /*  justincase configuration file.
 
     These are the default settings that are used if no configuration file is provided.
