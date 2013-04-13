@@ -25,7 +25,7 @@ module JustInCase
     the location of its working directory, where it will try to load the configuration
     file (the one you are reading right now).
 
-    If the configuration file is missing, it will fallback to use the default settings,
+    If the configuration file is missing it will fallback to use the default settings,
     that are the ones presented in the unmodified fresh version of the current file.
  */
  
@@ -38,8 +38,8 @@ module JustInCase
   "recursive_monitoring" : true,
 
 
-  // A regexp to filter files with
-  // "filter_files_with_regexp" : "/aregexp/i",
+  // A regexp to filter files names with
+  // "filter_file_names_with_regexp" : "/aregexp/i",
 
 
   // Prevents hidden files to be backed up.
@@ -91,7 +91,7 @@ module JustInCase
 
   // A string to prepend to file names.
   // In theory you *could* set this to an empty string, but doing so would
-  // have your OS to take care of it in a way you can't control.
+  // have your OS take care of it in a way you can't control.
   "file_copy_prefix" : "timestamp",
   // "file_copy_prefix" : "incremental_id",
 
@@ -114,7 +114,7 @@ module JustInCase
   // Please don't use the 4 digit format (the one with the setUID, setGID, StickyBit),
   // as it's not supported yet.
   "chomod_files" : false
-  //"chomod_files" : "400"
+  //"chmod_files" : "400"
 }
     ENDOFFILE
 
