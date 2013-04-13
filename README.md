@@ -150,7 +150,11 @@ Can be found in `justincase/lib/justincase/resources/templates.rb`
   // chmods backup files once copied.
   // Please don't use the 4 digit format (the one with the setUID, setGID, StickyBit),
   // as it's not supported yet.
+<<<<<<< HEAD
   "chmod_files" : false
+=======
+  "chomod_files" : false
+>>>>>>> origin/master
   //"chmod_files" : "400"
 }
 ```
