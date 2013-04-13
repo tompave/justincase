@@ -1,5 +1,5 @@
 require 'justincase/config'
-require 'justincase/vault_manager'
+require 'justincase/file_system/private_files'
 require 'thor'
 
 module JustInCase
@@ -18,16 +18,17 @@ module JustInCase
 
       def setup_chat
         puts "\nHello #{username}, here I'll setup the working directory for you."
-        puts "I only need to know where you want it to be located.\n "
+        puts "I only need to know where you want it to be located."
+        puts "(don't worry, I'll you to confirm it before doing anything stupid)\n "
 
         puts "The default path for the working directory is: '~/justincase'."
         change = SH.yes? "  Do you want to change it? (y/n)"
         if change
           root = nil
           until root
-            path = SH.ask "  Ok, enter the path for the working dir (Don't worry, I'll ask for confirmation):\n "
+            path = SH.ask "  Ok, enter the path for the working dir:\n "
             path = File.expand_path(path)
-            ok = SH.yes? "  I've got this one: '#{path}'.\n  Is it correct? (y/n)"
+            ok = SH.yes? "I've got this one: '#{path}'.\n  Is it correct? (y/n)"
             root = path if ok
           end
         else
@@ -36,14 +37,17 @@ module JustInCase
         puts "\nOk, I'm using this path: '#{root}'.\nI will store it as a String in '~/.justincaserc',\nthen I will build it using 'mkdir -p'."
         confirm = SH.yes? "  Do you confirm? (y/n)".colorize(:red)
         if confirm
-          puts "  Building the directory tree...".colorize(:green)
           JustInCase::Config.root_dir = root
-          JustInCase::Config.write_rc_file # this will read from JustInCase::Config.root_dir 
-          JustInCase::VaultManager.build_dir_tree
-          puts "  Done!".colorize(:green)
+          puts "Writing chosen root dir to '~/.justincaserc'...".colorize(:green)
+          JustInCase::FileSystem::PrivateFiles.write_rc_file
+          puts "Building the directory tree...".colorize(:green)
+          JustInCase::FileSystem::PrivateFiles.build_dir_tree # this will read from JustInCase::Config.root_dir 
+          puts "Done!".colorize(:green)
         else
           puts "Ok, aborting...\n "
         end
+      rescue Exception => ex
+        puts ex.message.colorize(:red)
       end
 
 

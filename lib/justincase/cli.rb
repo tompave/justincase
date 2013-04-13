@@ -53,7 +53,7 @@ module JustInCase
         #{file_path}\nYou should move it or rename it first. Aborting.".colorize(:red)
       else
         puts "Generating config file:\n  #{file_path}".colorize(:cyan)
-        JustInCase::VaultManager.create_config_file_to(file_path)
+        JustInCase::FileSystem::PrivateFiles.create_config_file_to(file_path)
       end
     rescue Exception => ex
       puts ex.message.colorize(:red)
@@ -62,19 +62,12 @@ module JustInCase
 
 
 
-    # desc "read_config", "looks for the config file and inports the options"
-    # option :file
-    # def read_config
-    #   JustInCase::Config.parse_config_file(options[:file])
-    # end
-
-
 
 
     desc "current_config","Print the current configuration"
     def current_config
-      JustInCase::Config.init
       conf_hash = JustInCase::Config.config
+      return unless conf_hash
       puts "Current configuration:"
       conf_hash.each_pair do |key, value|
         puts "  -  #{key}: #{value}"
@@ -108,7 +101,6 @@ module JustInCase
       if success = JustInCase::Config.init
         puts "success!!!!!!".colorize(:green)
       else
-        puts "Looks like I haven't been initialized yet.\nYou should run 'justintime setup' first.".colorize(:red)
         return false
       end
     end

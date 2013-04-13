@@ -1,4 +1,6 @@
 require 'resources/templates'
+require 'justincase/file_system/private_files'
+
 require 'json'
 require 'colorize'
 
@@ -7,7 +9,7 @@ module JustInCase
 
   module Config
     DEFAULT_WORKING_DIR = File.expand_path("~/justincase")
-    RC_FILE_PATH = File.expand_path("~/.justintimerc")
+    RC_FILE_PATH = File.expand_path("~/.justincaserc")
     CONFIG_FILE_NAME = "justincase.conf.json"
 
     # PID_FILE_PATH = File.join(DEFAULT_WORKING_DIR, ".justincased.pid")
@@ -47,17 +49,27 @@ module JustInCase
       # ----------------------------------
       # called by JustInCase::Cli.start
       def init
-        if root = read_from_rc_file # returns nil if doesn't exist
+        # returns nil if doesn't exist
+        if root = JustInCase::FileSystem::PrivateFiles.read_from_rc_file
           self.root_dir = root
-          parse_config_file # this will call the setter
+          unless Dir.exists?(@root_dir)
+            raise ConfigurationError.new(
+              "I found a '~/.justincaserc' file pointing to '#{@root_dir}', 
+              but I couldn't locate that directory. Either correct the path indicated in 
+              '~/.justincaserc', or delete/move it and run 'justintime setup' again."
+              .gsub("              ","").gsub("\n",""))
+          end
+          parse_config_file # this will always call the setter, even with an emopty hash
           return true
         else
+          puts "Looks like I haven't been installed yet.\nYou should run 'justintime setup' first.".colorize(:red)
           return false
         end
       rescue Exception => ex
-        puts ex.message.colorize(:red)
+        puts "Couldn't properly initialize:\n#{ex.message}".colorize(:red)
         return false
       end
+
 
 
 
@@ -77,39 +89,6 @@ module JustInCase
 
 
 
-      def write_rc_file(replace = true)
-        return false if !replace && File.exist?(RC_FILE_PATH)
-        File.open(RC_FILE_PATH,"w") { |file| file.write("root_dir #{@root_dir}") }
-        return true
-      rescue Exception => ex
-        puts ex.message.colorize(:red)
-        return false
-      end
-
-
-
-
-      # root_dir /path/to/dir
-      def read_from_rc_file
-        str = File.open(RC_FILE_PATH) { |file| file.read }
-        if str.start_with?("root_dir ")
-          str.sub!("root_dir ","")
-          return File.expand_path(str)
-        else
-          return nil
-        end
-      rescue Errno::ENOENT => err
-        puts "Couldn't find the file ~/.justincaserc".colorize(:red)
-        return nil
-      rescue Exception => ex
-        puts ex.message.colorize(:red)
-        return nil
-      end
-
-
-
-
-
       def parse_config_file
         hash = {}
         file_path = File.join(@root_dir, CONFIG_FILE_NAME)
@@ -117,9 +96,10 @@ module JustInCase
         hash = JSON.parse(conf_str)
         #puts self.config.to_s.magenta
       rescue JSON::ParserError => err
-        puts "Couldn't parse the configuration file. Please check the syntax (the commas!).".colorize(:red)
+        raise ConfigurationError.new("Couldn't parse the configuration file. Please check the syntax (the commas!)")
       rescue Errno::ENOENT => err
-        puts err.message.colorize(:red)
+        #raise ConfigurationError.new(err.message)
+        puts "Couldn't find the configuration file. I'm using the default settings.\n(run 'justincase current_config' to review them)".colorize(:cyan)
       ensure
         # I must give something to the setter, even an empty hash.
         # The setter will merge it with the defaults anyway.
@@ -139,7 +119,8 @@ module JustInCase
         conf_hash = validate_keys(conf_hash)
         conf_hash = validate_values(conf_hash)
       rescue Exception => ex
-        raise JustInCase::Config::ConfigurationError, "Configuration was invalid: #{ex.message}"
+        # Here I just wrap whatever exeption in a JustInCase::Config::ConfigurationError
+        raise ConfigurationError.new("Configuration was invalid: #{ex.message}")
       end
 
 
