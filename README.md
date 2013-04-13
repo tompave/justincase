@@ -1,4 +1,4 @@
-#justincase
+#justincase  
 
 v 0.0.0 - not ready yet!
 ---
@@ -15,16 +15,16 @@ It's all written in pure Ruby. File system events are handled by [Listen](https:
 The __CLI__ component is a one-shot utility to control the __daemon__ (start and stop, duh) and to generate a self documenting JSON configuration file. At the first run it builds the working directory tree for the __daemon__ at a location chosen by the user (can be reinitialized).
   
 The heavy lifting is carried out by the __daemon__, that listens for file system events in the target directories and can be controlled through UNIX signals.  
-As it records changes in the monitored directories, the daemon copies any new or modified file in a backup folder, and logs (in TXT or SQLite) all recorded modification.  
+As it records changes in the monitored directories, the daemon copies any new or modified file in a backup folder, and logs (in either TXT or SQLite format) all recorded modifications.  
 
 
 
 
 ##Why?
 
-Because I was fed up _a certain Mac app_ hanging when connecting to SMTP servers, failing to send emails and – just to make things funnier – deleting any trace of the failed messages from both the draft folder and the temp dir in ~/library.  
+Because I was fed up _a certain Mac app_ hanging when connecting to SMTP servers, failing to send emails and – just to make things funnier – deleting any trace of the failed messages from both the drafts folder and the temp dir in ~/library.  
 
-All jokes aside, __justincase__ is aimed at continuosly saving the state the of selected directories _just in case_ something goes wrong.  
+All jokes aside, __justincase__ is aimed at continuosly saving the state of selected directories _just in case_ something goes wrong.  
 
 If you:
 
@@ -43,6 +43,8 @@ Can be found in `justincase/lib/justincase/resources/templates.rb`
 
 ```javascript
 /*  justincase configuration file.
+    Author: Tommaso Pavese (wonderingmachine.com)
+    MIT License
 
     These are the default settings that are used if no configuration file is provided.
     All fields are optional: if you omit any key, the default value will be used.
@@ -60,7 +62,7 @@ Can be found in `justincase/lib/justincase/resources/templates.rb`
     the location of its working directory, where it will try to load the configuration
     file (the one you are reading right now).
 
-    If the configuration file is missing, it will fallback to use the default settings,
+    If the configuration file is missing it will fallback to use the default settings,
     that are the ones presented in the unmodified fresh version of the current file.
  */
  
@@ -73,8 +75,8 @@ Can be found in `justincase/lib/justincase/resources/templates.rb`
   "recursive_monitoring" : true,
 
 
-  // A regexp to filter files with
-  // "filter_files_with_regexp" : "/aregexp/i",
+  // A regexp to filter files names with
+  // "filter_file_names_with_regexp" : "/aregexp/i",
 
 
   // Prevents hidden files to be backed up.
@@ -126,7 +128,7 @@ Can be found in `justincase/lib/justincase/resources/templates.rb`
 
   // A string to prepend to file names.
   // In theory you *could* set this to an empty string, but doing so would
-  // have your OS to take care of it in a way you can't control.
+  // have your OS take care of it in a way you can't control.
   "file_copy_prefix" : "timestamp",
   // "file_copy_prefix" : "incremental_id",
 
@@ -148,8 +150,8 @@ Can be found in `justincase/lib/justincase/resources/templates.rb`
   // chmods backup files once copied.
   // Please don't use the 4 digit format (the one with the setUID, setGID, StickyBit),
   // as it's not supported yet.
-  "chomod_files" : false
-  //"chomod_files" : "400"
+  "chmod_files" : false
+  //"chmod_files" : "400"
 }
 ```
 
