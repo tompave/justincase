@@ -45,14 +45,23 @@ module JustInCase
           build_dir_tree
         end
 
+        def rc_file_exists?
+          return File.exist?(JustInCase::Config::RC_FILE_PATH)
+        end
+
 
 
         def write_rc_file(force_replace = false)
-          if !force_replace && File.exist?(JustInCase::Config::RC_FILE_PATH)
-            raise PrivateFilesError.new("#{JustInCase::Config::RC_FILE_PATH} already exists.")
-          else
-            File.open(JustInCase::Config::RC_FILE_PATH,"w") { |file| file.write("root_dir #{JustInCase::Config.root_dir}") }
+          if rc_file_exists?
+            if force_replace
+              puts "The file '#{JustInCase::Config::RC_FILE_PATH}' already exists. I'm overwriting it.".colorize(:yellow)
+            else
+              raise PrivateFilesError.new("#{JustInCase::Config::RC_FILE_PATH} already exists.")
+            end
           end
+
+          File.open(JustInCase::Config::RC_FILE_PATH,"w") { |file| file.write("root_dir #{JustInCase::Config.root_dir}") }
+
         rescue Exception => ex
           raise PrivateFilesError.new("Couldn't create the file '~/.justincaserc': #{ex.message}")
         end
@@ -74,6 +83,8 @@ module JustInCase
           puts ex.message.colorize(:red)
           return nil
         end
+
+        alias rc_file_is_valid? read_from_rc_file
         
       end # class << self
 

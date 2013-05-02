@@ -6,4 +6,5 @@
 
 require 'justincase/cli'
 
+
 JustInCase::Cli.start

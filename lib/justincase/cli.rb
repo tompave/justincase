@@ -21,6 +21,8 @@ module JustInCase
   class Cli < Thor
 
     default_task :welcome
+    
+    
 
     desc "welcome", "Print the welcome message with the commands list"
     def welcome
@@ -33,6 +35,7 @@ module JustInCase
     def setup
       JustInCase::Chatter.setup_chat
     end
+    map "--setup" => :setup
 
 
 
@@ -42,8 +45,8 @@ module JustInCase
                 :banner => "path",
                 :desc => "a custom path to generate the file to, comprising the file name"
     def generate_config
-      if options[:to_path]
-        file_path = File.expand_path(options[:to_path])
+      if options[:to]
+        file_path = File.expand_path(options[:to])
       else
         file_path = File.expand_path(File.join(".",JustInCase::Config::CONFIG_FILE_NAME))
       end
@@ -89,8 +92,10 @@ module JustInCase
 
     desc "version","Print the version."
     def version
-      puts JustInCase::Meta::VERSION
+      puts "justincase " + JustInCase::Meta::VERSION
     end
+    map "-v" => :version
+    map "--version" => :version
 
 
     desc "start",
@@ -131,7 +136,27 @@ end # module
 
 
 
+#default_task :default
 
+
+    # desc "default", "should be hidden", hide: true
+    # def default(args = :help)
+    #   unless self.respond_to?(args)
+    #     puts "justincase: invalid command '#{args}'"
+    #     help
+    #     return
+    #   end
+    #   help
+    # rescue Exception => ex
+    #   puts "JustInCase::Cli#default exception: #{ex.message}".colorize(:red)
+    # end
+
+
+    # def help(task = nil, subcommand = false)
+    #   puts "ciaoooo".colorize(:green)
+    #   super(task, subcommand)
+    #   puts "ciaoooo".colorize(:red)
+    # end
 
 
 

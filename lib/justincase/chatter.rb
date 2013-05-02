@@ -19,7 +19,13 @@ module JustInCase
       def setup_chat
         puts "\nHello #{username}, here I'll setup the working directory for you."
         puts "I only need to know where you want it to be located."
-        puts "(don't worry, I'll you to confirm it before doing anything stupid)\n "
+        puts "(don't worry, I'll ask you to confirm it before doing anything stupid)\n "
+
+        if JustInCase::FileSystem::PrivateFiles.rc_file_exists? && orig_dir = JustInCase::FileSystem::PrivateFiles.rc_file_is_valid?
+          puts "I've found the file #{JustInCase::Config::RC_FILE_PATH}, and it indicates #{orig_dir} as the working directory.".colorize(:yellow)
+          puts "Continuing will overwrite it. You can quit now and manually remove/backup it.".colorize(:yellow)
+          return unless SH.yes?("Continue?")
+        end
 
         puts "The default path for the working directory is: '~/justincase'."
         change = SH.yes? "  Do you want to change it? (y/n)"
@@ -39,7 +45,7 @@ module JustInCase
         if confirm
           JustInCase::Config.root_dir = root
           puts "Writing chosen root dir to '~/.justincaserc'...".colorize(:green)
-          JustInCase::FileSystem::PrivateFiles.write_rc_file
+          JustInCase::FileSystem::PrivateFiles.write_rc_file(true)
           puts "Building the directory tree...".colorize(:green)
           JustInCase::FileSystem::PrivateFiles.build_dir_tree # this will read from JustInCase::Config.root_dir 
           puts "Done!".colorize(:green)
