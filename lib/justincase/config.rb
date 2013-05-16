@@ -45,6 +45,21 @@ module JustInCase
       end
 
 
+
+      def log_path
+        return File.join(root_dir, "logs")
+      end
+
+      def log_std_path
+        return File.join(root_dir, "logs/std")
+      end
+
+      def log_debug_path
+        return File.join(root_dir, "logs/debug")
+      end
+
+
+
       # ----------------------------------
       # called by JustInCase::Cli.start
       def init
@@ -54,8 +69,8 @@ module JustInCase
           unless Dir.exists?(@root_dir)
             raise ConfigurationError.new(
               "I found a '~/.justincaserc' file pointing to '#{@root_dir}', 
-              but I couldn't locate that directory. Either correct the path indicated in 
-              '~/.justincaserc', or delete/move it and run 'justintime setup' again."
+              but I couldn't locate that directory. Either correct the path written in 
+              '~/.justincaserc' or run 'justintime setup' again."
               .gsub("              ","").gsub("\n",""))
           end
           parse_config_file # this will always call the setter, even with an emopty hash

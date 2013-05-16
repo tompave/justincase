@@ -6,11 +6,8 @@ require 'colorize'
 module JustInCase
   module FileSystem
 
-
-
-
     module PrivateFiles
-      SUB_DIRS = ["temp","backups","logs", "logs/debug"]
+      SUB_DIRS = ["temp","backups","logs", "logs/debug", "logs/std"]
       class << self
         def build_dir_tree
           @root = JustInCase::Config.root_dir
