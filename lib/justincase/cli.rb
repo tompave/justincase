@@ -1,6 +1,7 @@
 require 'justincase'
 require 'justincase/thor_overrides'
 require 'justincase/chatter'
+require 'justincase/daemon'
 
 require 'thor'
 require 'thor/group'
@@ -22,12 +23,13 @@ module JustInCase
 
     default_task :welcome
     
-    
 
-    desc "welcome", "Print the welcome message with the commands list"
+    desc "help", "Print the welcome message with the commands list", hide: true
     def welcome
       puts JustInCase::Templates::WELCOME_MESSAGE
       self.help
+    rescue Exception => ex
+      puts "ex.class: #{ex.class}, ex.message: #{ex.message}".red
     end
 
 
@@ -104,7 +106,10 @@ module JustInCase
     #option :conf_file
     def start
       if success = JustInCase::Config.init
-        puts "success!!!!!!".colorize(:green)
+        puts "Configuration loaded. Starting the daemon".colorize(:green)
+        conf_hash = JustInCase::Config.config
+        daemon = JustInCase::Daemon.new(conf_hash)
+        daemon.start
       else
         return false
       end
@@ -124,12 +129,7 @@ module JustInCase
     end
 
 
-    Signal.trap("INT") do
-      puts "\nlol. received a SIGINT. how cute"
-      exit(false)
-    end
-
-
+    
   end # class
 end # module
 

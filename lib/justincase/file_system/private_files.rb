@@ -72,6 +72,7 @@ module JustInCase
           str = File.open(JustInCase::Config::RC_FILE_PATH) { |file| file.read }
           if str.start_with?("root_dir ")
             str.sub!("root_dir ","")
+            # now str should be the path. I'll just return it, and it will be checked elsewhere
             return File.expand_path(str)
           else
             return nil

@@ -1,12 +1,19 @@
 require 'justincase/config'
+require 'justincase/daemon'
+
 
 module JustInCase
-  class DaemonManager
+  class DaemonHelper
 
 
     class << self
+
+      def start
+      end
+
+
       def store_pid(pid)
-        File.open(JustInCase::Config::PID_FILE_PATH, "w") { |file| file.write(pid) }
+        File.open(JustInCase::Config.pid_file_path, "w") { |file| file.write(pid) }
       end
 
 
@@ -19,11 +26,13 @@ module JustInCase
 
         if File.exist?(pid_file)
           pid = File.open(pid_file) { |file| file.read }
+          pid = pid.to_i
           if is_running?(pid)
             # it's already running. can't start
             return false
           else
             # pid_file found, but daemon not running.
+            puts "pid_file found but daemon not running. overwriting and starting anyway.".yellow
             # can start.
             # since we are here let's delete the old pid_file
             File.delete(pid_file)
@@ -49,7 +58,7 @@ module JustInCase
         rescue Errno::ESRCH
           # Errno::ESRCH, 'No such process'
           return false
-        rescue Exception
+        rescue Errno::EPERM
           # Errno::EPERM, 'Operation not permitted'
           # (process exists but does not belong to us)
           return true
@@ -57,5 +66,5 @@ module JustInCase
       end
 
     end # class << self
-  end # class DaemonManager
+  end # class DaemonHelper
 end # module JustInCase

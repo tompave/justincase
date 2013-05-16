@@ -11,8 +11,6 @@ module JustInCase
     DEFAULT_WORKING_DIR = File.expand_path("~/justincase")
     RC_FILE_PATH = File.expand_path("~/.justincaserc")
     CONFIG_FILE_NAME = "justincase.conf.json"
-
-    # PID_FILE_PATH = File.join(DEFAULT_WORKING_DIR, ".justincased.pid")
     
     # these can be chaneg at runtime once the conf file is parsed
     @root_dir ||= DEFAULT_WORKING_DIR
@@ -24,9 +22,10 @@ module JustInCase
 
       attr_reader :pid_file_path
       attr_reader :root_dir
+      
       def root_dir=(dir)
         @root_dir = dir
-        @pid_file_path = File.join(dir, ".justincased.pid")
+        @pid_file_path = File.join(dir, "justincased.pid")
       end
 
 
@@ -49,7 +48,7 @@ module JustInCase
       # ----------------------------------
       # called by JustInCase::Cli.start
       def init
-        # returns nil if doesn't exist
+        # read_from_rc_file returns nil if rcfile doesn't exist
         if root = JustInCase::FileSystem::PrivateFiles.read_from_rc_file
           self.root_dir = root
           unless Dir.exists?(@root_dir)
@@ -62,7 +61,7 @@ module JustInCase
           parse_config_file # this will always call the setter, even with an emopty hash
           return true
         else
-          puts "Looks like I haven't been installed yet.\nYou should run 'justintime setup' first.".colorize(:red)
+          puts "Looks like justintime hasn't been properly installed yet.\nYou should run 'justintime setup' first.".colorize(:red)
           return false
         end
       rescue Exception => ex
@@ -184,15 +183,15 @@ module JustInCase
         conf.delete(:timestamp_template) unless conf[:timestamp_template].is_a?(String)
 
         # Boolean or numerical string in range 000..777
-        test = conf[:chomod_files]
+        test = conf[:chmod_files]
         unless test == false # (nil == false) returns false, so 'nil' too goes inside the block
           if test.is_a?(String) && test.length == 3
             arr = ["0","1","2","3","4","5","6","7"]
             unless arr.include?(test[0]) && arr.include?(test[1]) && arr.include?(test[2])
-              conf.delete(:chomod_files) 
+              conf.delete(:chmod_files) 
             end
           else
-            conf.delete(:chomod_files)
+            conf.delete(:chmod_files)
           end
         end
 

@@ -19,11 +19,11 @@ module JustInCase
       def setup_chat
         puts "\nHello #{username}, here I'll setup the working directory for you."
         puts "I only need to know where you want it to be located."
-        puts "(don't worry, I'll ask you to confirm it before doing anything stupid)\n "
+        puts "(don't worry, I'll ask for confirmation before doing anything stupid)\n "
 
         if JustInCase::FileSystem::PrivateFiles.rc_file_exists? && orig_dir = JustInCase::FileSystem::PrivateFiles.rc_file_is_valid?
           puts "I've found the file #{JustInCase::Config::RC_FILE_PATH}, and it indicates #{orig_dir} as the working directory.".colorize(:yellow)
-          puts "Continuing will overwrite it. You can quit now and manually remove/backup it.".colorize(:yellow)
+          puts "Continuing will overwrite it. You can quit now and manually remove/backup the '.justincaserc' file.".colorize(:yellow)
           return unless SH.yes?("Continue?")
         end
 

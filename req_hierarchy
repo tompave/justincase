@@ -9,7 +9,7 @@ justincase.rb
     justincase/runner
         justincase/config
     justincase/utilities
-    justincase/daemon_manager
+    justincase/daemon_helper
 
 
 justincase/cli

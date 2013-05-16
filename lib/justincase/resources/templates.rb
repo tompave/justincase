@@ -113,7 +113,7 @@ module JustInCase
   // chmods backup files once copied.
   // Please don't use the 4 digit format (the one with the setUID, setGID, StickyBit),
   // as it's not supported yet.
-  "chomod_files" : false
+  "chmod_files" : false
   //"chmod_files" : "400"
 }
     ENDOFFILE
